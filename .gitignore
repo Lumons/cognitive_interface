@@ -1,0 +1,15 @@
+# Compiled python files
+__pycache__/
+
+# Virtual environment
+env/
+venv/
+
+# VSCode settings
+.vscode/
+
+# Log files
+logs/
+
+# Prompt library
+prompt_library/

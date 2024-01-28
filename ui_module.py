@@ -1,6 +1,12 @@
 import tkinter as tk
 from command_module import CommandHandler
 import datetime
+import sounddevice as sd
+import wavio
+import threading
+import whisper
+import numpy as np
+import os
 
 class ApplicationUI:
     def __init__(self, root):
@@ -37,6 +43,50 @@ class ApplicationUI:
         self.prompt_selector = tk.Checkbutton(self.root, text="Use Custom Prompt", variable=self.prompt_selector_var)
         self.prompt_selector.grid(row=3, column=0, sticky="w")
 
+        # Buttons for recording audio
+        self.start_rec_button = tk.Button(self.root, text="Start Recording", command=self.start_recording)
+        self.start_rec_button.grid(row=4, column=0)
+        self.stop_rec_button = tk.Button(self.root, text="Stop Recording", command=self.stop_recording)
+        self.stop_rec_button.grid(row=4, column=1)
+
+    def transcribe_audio(self, audio_path):
+        model = whisper.load_model("base")  # You can choose different model sizes
+        result = model.transcribe(audio_path)
+        transcription = result["text"]
+        return transcription
+    
+
+    def start_recording(self):
+        self.recording = True
+        self.record_thread = threading.Thread(target=self.record_audio)
+        self.record_thread.start()
+
+    def stop_recording(self):
+        self.recording = False
+        self.record_thread.join()
+
+        # Transcribe the audio
+        transcription = self.transcribe_audio("output.wav")
+
+        # Place the transcription in the entry field for editing
+        self.entry.delete(0, tk.END)  # Clear any existing text in the entry field
+        self.entry.insert(0, transcription)  # Insert the transcription
+
+        # Optionally, delete the audio file if not needed
+        os.remove("output.wav")
+
+    def record_audio(self):
+        fs = 44100  # Sample rate
+        myrecording = []
+        with sd.InputStream(samplerate=fs, channels=2) as stream:
+            while self.recording:
+                data, _ = stream.read(1024)  # Read chunks of 1024 frames
+                myrecording.append(data)
+    
+        # Convert the list of numpy arrays into a single numpy array
+        myrecording = np.concatenate(myrecording, axis=0)
+        wavio.write("output.wav", myrecording, fs, sampwidth=2) 
+        
     def execute_command(self, event=None):
         command = self.entry.get()
         self.command_handler.execute(command)

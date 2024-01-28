@@ -10,7 +10,7 @@ class APIClient:
 
     def set_history(self, history):
         self.history = history
-
+        
     def send_request(self, user_input):
         self.history.append({"role": "user", "content": user_input})
         try:
@@ -31,6 +31,7 @@ class APIClient:
                 return new_message_content
         except Exception as e:
             return f"Error accessing content: {e}"
+        
         
     def get_history(self):
         # Return the conversation history

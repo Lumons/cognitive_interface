@@ -1,5 +1,6 @@
 import tkinter as tk
 from command_module import CommandHandler
+import datetime
 
 class ApplicationUI:
     def __init__(self, root):
@@ -42,10 +43,12 @@ class ApplicationUI:
         self.entry.delete(0, tk.END)
 
     def display_message(self, message):
+        timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        formatted_message = f"[{timestamp}] {message}\n"
         self.text_area.config(state='normal')
-        self.text_area.insert(tk.END, f"{message}\n")
+        self.text_area.insert(tk.END, formatted_message)
         self.text_area.config(state='disabled')
-
+    
     def save_log(self, file_path):
         self.display_message(f"Log saved to {file_path}")
 

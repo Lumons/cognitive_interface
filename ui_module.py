@@ -65,11 +65,11 @@ class ApplicationUI:
         self.model_toggle.grid(row=4, column=1, sticky="ew")
 
     def transcribe_audio(self, audio_path):
-        model = whisper.load_model("medium")  # You can choose different model sizes
+        selected_model_size = self.model_options.get()  # Get the selected model size
+        model = whisper.load_model(selected_model_size)  # Load the model based on the selection
         result = model.transcribe(audio_path)
         transcription = result["text"]
         return transcription
-    
 
     def start_recording(self):
         self.recording = True

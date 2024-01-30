@@ -40,10 +40,8 @@ class CommandHandler:
         self.file_path = os.path.join(log_dir, self.file_name)
 
         # Add system prompt to history with timestamp
-        if self.ui.prompt_selector_var.get():
-            system_prompt = self.read_system_prompt("prompt1.txt")
-        else:
-            system_prompt = self.read_system_prompt("default_prompt.txt")
+        selected_prompt_file = self.ui.prompt_selector_var.get()
+        system_prompt = self.read_system_prompt(selected_prompt_file)
 
         # Add system prompt to history with timestamp
         self.add_message_to_history("system", system_prompt)

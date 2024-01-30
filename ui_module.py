@@ -8,6 +8,9 @@ import whisper
 import numpy as np
 import os
 
+# Get the directory of the current script
+current_dir = os.path.dirname(os.path.abspath(__file__))
+
 class ApplicationUI:
     def __init__(self, root):
         self.root = root
@@ -24,6 +27,8 @@ class ApplicationUI:
         self.text_area = tk.Text(self.root, state='disabled', height=15, width=50)
         self.scrollbar = tk.Scrollbar(self.root, command=self.text_area.yview)
         self.text_area.configure(yscrollcommand=self.scrollbar.set)
+        # Improve readability of the text area
+        self.text_area.config(font=("Arial", 12), wrap=tk.WORD, bg="white", fg="black")
 
         # Place the Text widget and the Scrollbar in the grid
         self.text_area.grid(row=0, column=0, sticky="nsew")
@@ -33,24 +38,34 @@ class ApplicationUI:
         self.entry = tk.Entry(self.root)
         self.entry.grid(row=1, column=0, sticky="ew", columnspan=2)
         self.entry.bind("<Return>", self.execute_command)
+        self.entry.config(font=("Arial", 12))
 
         # Submit button for sending commands
         self.submit_button = tk.Button(self.root, text="Submit", command=self.execute_command)
         self.submit_button.grid(row=2, column=0, sticky="ew")
 
-        # Checkbox for selecting custom prompt
-        self.prompt_selector_var = tk.IntVar()
-        self.prompt_selector = tk.Checkbutton(self.root, text="Use Custom Prompt", variable=self.prompt_selector_var)
-        self.prompt_selector.grid(row=3, column=0, sticky="w")
-
         # Buttons for recording audio
         self.start_rec_button = tk.Button(self.root, text="Start Recording", command=self.start_recording)
         self.start_rec_button.grid(row=4, column=0)
         self.stop_rec_button = tk.Button(self.root, text="Stop Recording", command=self.stop_recording)
-        self.stop_rec_button.grid(row=4, column=1)
+        self.stop_rec_button.grid(row=5, column=0)
+
+       # Fetch .txt file names from a specific directory
+        file_path = os.path.join(current_dir, "prompt_library")        
+        txt_files = [f for f in os.listdir(file_path) if f.endswith('.txt')]
+
+        # Dropdown for system prompts
+        self.prompt_selector_var = tk.StringVar(self.root)
+        self.prompt_dropdown = tk.OptionMenu(self.root, self.prompt_selector_var, *txt_files)
+        self.prompt_dropdown.grid(row=3, column=1, sticky="ew")
+        
+        # Toggle switch for Whisper models
+        self.model_options = tk.StringVar(value="medium")
+        self.model_toggle = tk.OptionMenu(self.root, self.model_options, "base","small", "medium", "large")
+        self.model_toggle.grid(row=4, column=1, sticky="ew")
 
     def transcribe_audio(self, audio_path):
-        model = whisper.load_model("base")  # You can choose different model sizes
+        model = whisper.load_model("medium")  # You can choose different model sizes
         result = model.transcribe(audio_path)
         transcription = result["text"]
         return transcription

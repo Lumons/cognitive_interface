@@ -9,6 +9,7 @@ class CommandHandler:
         self.ui = ui
         self.api_client = APIClient()
         self.file_path = None
+        print(self.file_path)
 
     def execute(self, command):
         # Check for specific commands and handle them

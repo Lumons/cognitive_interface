@@ -7,6 +7,8 @@ import threading
 import whisper
 import numpy as np
 import os
+from doc_explorer import SearchWindow
+
 
 # Get the directory of the current script
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -63,6 +65,16 @@ class ApplicationUI:
         self.model_options = tk.StringVar(value="medium")
         self.model_toggle = tk.OptionMenu(self.root, self.model_options, "base","small", "medium", "large")
         self.model_toggle.grid(row=4, column=1, sticky="ew")
+       
+        # Button to open search window
+        self.search_window_button = tk.Button(self.root, text="Open Search Window", command=self.open_search_window)
+        self.search_window_button.grid(row=6, column=0, sticky="ew")
+
+
+    def open_search_window(self):
+        # This method creates a new SearchWindow instance
+        search_window = tk.Toplevel(self.root)
+        SearchWindow(search_window)
 
     def transcribe_audio(self, audio_path):
         selected_model_size = self.model_options.get()  # Get the selected model size

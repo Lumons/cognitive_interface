@@ -38,17 +38,13 @@ def add_documents_to_index(indexer, logs_folder):
 logs_folder_path = 'logs'  # Replace with your logs folder path
 add_documents_to_index(ix, logs_folder_path)
 
-
-# Function to search the index
+# Function to search the index and return results
 def search_index(query_str):
     ix = index.open_dir("indexdir")
+    results_list = []
     with ix.searcher() as searcher:
         query = QueryParser("content", ix.schema).parse(query_str)
-        results = searcher.search(query)
+        results = searcher.search(query, limit=None)  # Set limit=None to get all results
         for result in results:
-            print(f"Filename: {result['filename']}, Role: {result['role']}, Content: {result['content']}")
-
-# Example search
-        
-search_index("log")
-
+            results_list.append({"filename": result['filename'], "role": result['role'], "content": result['content']})
+    return results_list

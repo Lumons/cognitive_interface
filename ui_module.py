@@ -24,6 +24,38 @@ class ApplicationUI:
 
         self.setup_ui()
 
+        # Add a button to open the summary window
+        self.summary_window_button = tk.Button(self.root, text="Open Summary", command=self.open_summary_window)
+        self.summary_window_button.grid(row=7, column=0, sticky="ew")  # Adjust row/column as needed
+
+        # Variable to keep track of the summary window
+        self.summary_window = None
+
+    def open_summary_window(self):
+        # Check if the window is already open
+        if self.summary_window is None or not self.summary_window.winfo_exists():
+            self.summary_window = tk.Toplevel(self.root)
+            self.summary_window.title("Summary")
+
+            # Create a text widget for displaying the summary
+            self.summary_text_area = tk.Text(self.summary_window, height=15, width=50)
+            self.summary_text_area.grid(row=0, column=0, sticky="nsew")
+
+            # If needed, add other UI elements here (e.g., buttons, labels)
+
+        else:
+            # Bring the window to the front if it's already open
+            self.summary_window.lift()
+
+    def update_summary_display(self, summary_data):
+        if self.summary_window and self.summary_window.winfo_exists():
+            self.summary_text_area.config(state='normal')
+            self.summary_text_area.delete('1.0', tk.END)  # Clear existing text
+            self.summary_text_area.insert(tk.END, summary_data)  # Insert new summary data
+            self.summary_text_area.config(state='disabled')
+        else:
+            print("Summary window is not open.")
+
     def setup_ui(self):
         # Create a Text widget with a Scrollbar
         self.text_area = tk.Text(self.root, state='disabled', height=15, width=50)

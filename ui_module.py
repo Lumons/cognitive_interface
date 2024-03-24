@@ -31,6 +31,9 @@ class ApplicationUI:
         # Variable to keep track of the summary window
         self.summary_window = None
 
+        # Initialise the recording list
+        self.myrecording = []  # Initialize myrecording as an empty list
+
     def open_summary_window(self):
         # Check if the window is already open
         if self.summary_window is None or not self.summary_window.winfo_exists():
@@ -102,6 +105,9 @@ class ApplicationUI:
         self.search_window_button = tk.Button(self.root, text="Open Search Window", command=self.open_search_window)
         self.search_window_button.grid(row=6, column=0, sticky="ew")
 
+    def ensure_directory_exists(self, directory):
+        if not os.path.exists(directory):
+            os.makedirs(directory)
 
     def open_search_window(self):
         # This method creates a new SearchWindow instance
@@ -120,32 +126,48 @@ class ApplicationUI:
         self.record_thread = threading.Thread(target=self.record_audio)
         self.record_thread.start()
 
+    def record_audio(self):
+        fs = 44100  # Sample rate
+        self.myrecording = []
+        with sd.InputStream(samplerate=fs, channels=2) as stream:
+            while self.recording:
+                data, _ = stream.read(1024)  # Read chunks of 1024 frames
+                self.myrecording.append(data)
+
     def stop_recording(self):
         self.recording = False
         self.record_thread.join()
 
+        if not self.myrecording:
+            print("No audio was recorded.")
+            return
+         
+        # Convert the list of numpy arrays into a single numpy array
+        recorded_audio = np.concatenate(self.myrecording, axis=0)
+        self.myrecording = []  # Reset myrecording for the next recording
+
+        # Define the directory and file name
+        audio_file_path = self.get_audio_file_path()
+
+        # Save the recording with a timestamp
+        wavio.write(audio_file_path, recorded_audio, 44100, sampwidth=2)
+
         # Transcribe the audio
-        transcription = self.transcribe_audio("output.wav")
+        transcription = self.transcribe_audio(audio_file_path)
 
         # Place the transcription in the entry field for editing
         self.entry.delete(0, tk.END)  # Clear any existing text in the entry field
         self.entry.insert(0, transcription)  # Insert the transcription
 
         # Optionally, delete the audio file if not needed
-        os.remove("output.wav")
+        # os.remove(audio_file_path)
 
-    def record_audio(self):
-        fs = 44100  # Sample rate
-        myrecording = []
-        with sd.InputStream(samplerate=fs, channels=2) as stream:
-            while self.recording:
-                data, _ = stream.read(1024)  # Read chunks of 1024 frames
-                myrecording.append(data)
+    def get_audio_file_path(self):
+        logs_dir = os.path.join(current_dir, "logs", "audio")
+        self.ensure_directory_exists(logs_dir)  # Ensure the directory exists
+        timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        return os.path.join(logs_dir, f"audio_log_{timestamp}.wav")
     
-        # Convert the list of numpy arrays into a single numpy array
-        myrecording = np.concatenate(myrecording, axis=0)
-        wavio.write("output.wav", myrecording, fs, sampwidth=2) 
-        
     def execute_command(self, event=None):
         command = self.entry.get()
         self.command_handler.execute(command)

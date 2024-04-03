@@ -1,7 +1,7 @@
 from api_module import APIClient
 import datetime
 import os
-from datetime import timezone
+from datetime import datetime, timezone
 import json
 
 class CommandHandler:
@@ -10,6 +10,61 @@ class CommandHandler:
         self.api_client = APIClient()
         self.file_path = None
         print(self.file_path)
+
+    def find_latest_log_file(self):
+        log_dir = "logs"
+        log_files = [f for f in os.listdir(log_dir) if f.endswith('.json')]
+        if not log_files:
+            return None
+
+        # Extract dates from file names and find the latest one
+        date_format = "%Y-%m-%dT%H-%M-%S%z"  # Adjust according to your file naming format
+        latest_date = None
+        latest_file = None
+
+        for file_name in log_files:
+            try:
+                # Extract the date from the file name
+                date_str = file_name.split('-Log-entry-')[0]  # Adjust the split according to your naming convention
+                file_date = datetime.strptime(date_str, date_format)
+
+                if latest_date is None or file_date > latest_date:
+                    latest_date = file_date
+                    latest_file = file_name
+            except (ValueError, IndexError):
+                continue  # Skip file if date parsing fails or the split is incorrect
+
+        if latest_file:
+            return os.path.join(log_dir, latest_file)
+        else:
+            return None
+        
+    def generate_summary(self):
+        # Step 1: Locate the Latest Log File
+        latest_log_file = self.find_latest_log_file()
+        if not latest_log_file:
+            return "No log files found."
+
+        # Step 2: Parse the Log File
+        user_content = self.parse_log_file(latest_log_file)
+        if not user_content:
+            return "No user entries found in the latest log."
+
+        # Step 3: Send Data for Summarization
+        summary = self.api_client.send_summary_request(user_content)
+        return summary
+
+    def parse_log_file(self, log_file_path):
+        user_content = []
+        try:
+            with open(log_file_path, "r") as file:
+                log_data = json.load(file)
+                for entry in log_data:
+                    if entry.get("role") == "user":
+                        user_content.append(entry.get("content", ""))
+        except (IOError, json.JSONDecodeError):
+            return None
+        return " ".join(user_content)
 
     def execute(self, command):
         # Check for specific commands and handle them

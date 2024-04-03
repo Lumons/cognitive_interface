@@ -32,7 +32,22 @@ class APIClient:
         except Exception as e:
             return f"Error accessing content: {e}"
         
-        
+    def send_summary_request(self, content):
+        try:
+            # Here, a general completion model is used to create a summary.
+            # You might want to customize the prompt based on the content and desired summary style.
+            summary_completion = openai.Completion.create(
+                model="local-model",  # Your custom model
+                prompt=f"Please summarize the following information:\n\n{content}",
+                max_tokens=150  # Adjust as needed
+            )
+
+            # Extracting and returning the summary text
+            return summary_completion.choices[0].text.strip()
+        except Exception as e:
+            return f"Error generating summary: {e}"
+
+
     def get_history(self):
         # Return the conversation history
         return self.history

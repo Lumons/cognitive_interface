@@ -35,7 +35,7 @@ class ApplicationUI:
         self.myrecording = []  # Initialize myrecording as an empty list
 
     def open_summary_window(self):
-        # Check if the window is already open
+        # Ensure the summary window is open
         if self.summary_window is None or not self.summary_window.winfo_exists():
             self.summary_window = tk.Toplevel(self.root)
             self.summary_window.title("Summary")
@@ -44,11 +44,14 @@ class ApplicationUI:
             self.summary_text_area = tk.Text(self.summary_window, height=15, width=50)
             self.summary_text_area.grid(row=0, column=0, sticky="nsew")
 
-            # If needed, add other UI elements here (e.g., buttons, labels)
-
         else:
             # Bring the window to the front if it's already open
             self.summary_window.lift()
+
+        # Generate and display the summary
+        summary_data = self.command_handler.generate_summary()
+        self.update_summary_display(summary_data)
+
 
     def update_summary_display(self, summary_data):
         if self.summary_window and self.summary_window.winfo_exists():

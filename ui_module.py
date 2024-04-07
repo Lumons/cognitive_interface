@@ -170,7 +170,7 @@ class ApplicationUI:
         self.ensure_directory_exists(logs_dir)  # Ensure the directory exists
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         return os.path.join(logs_dir, f"audio_log_{timestamp}.wav")
-    
+
     def execute_command(self, event=None):
         command = self.entry.get()
         self.command_handler.execute(command)
@@ -182,7 +182,7 @@ class ApplicationUI:
         self.text_area.config(state='normal')
         self.text_area.insert(tk.END, formatted_message)
         self.text_area.config(state='disabled')
-    
+
     def save_log(self, file_path):
         self.display_message(f"Log saved to {file_path}")
 

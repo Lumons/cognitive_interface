@@ -1,8 +1,9 @@
 from api_module import APIClient
-import datetime
 import os
-from datetime import datetime, timezone
 import json
+import datetime
+
+
 
 class CommandHandler:
     def __init__(self, ui):
@@ -75,7 +76,7 @@ class CommandHandler:
             self.handle_log_entry_input(command)
 
     def add_message_to_history(self, role, content):
-        timestamp = datetime.datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S%z")
+        timestamp = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%S%z")
         message = {"role": role, "content": content, "timestamp": timestamp}
         self.api_client.get_history().append(message)
 
@@ -85,7 +86,7 @@ class CommandHandler:
         os.makedirs(log_dir, exist_ok=True)
 
         # Generate a timestamp for the file name
-        now = datetime.datetime.now(timezone.utc)
+        now = datetime.datetime.now(datetime.timezone.utc)
         iso_date_str_with_offset = now.strftime("%Y-%m-%dT%H-%M-%S%z").replace(':', '-')
         
         # Create a unique log file name

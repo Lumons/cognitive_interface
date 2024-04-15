@@ -27,7 +27,7 @@ class CommandHandler:
             try:
                 # Extract the date from the file name
                 date_str = file_name.split('-Log-entry-')[0]  # Adjust the split according to your naming convention
-                file_date = datetime.strptime(date_str, date_format)
+                file_date = datetime.datetime.strptime(date_str, date_format)
 
                 if latest_date is None or file_date > latest_date:
                     latest_date = file_date

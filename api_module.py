@@ -1,30 +1,29 @@
-import openai
+from openai import OpenAI
 
 class APIClient:
     def __init__(self):
-        openai.api_base = "http://localhost:1234/v1"
-        openai.api_key = ""
-
-        self.client = openai.ChatCompletion()
+        self.client = OpenAI(api_key="lm-studio", base_url="http://localhost:1234/v1")
         self.history = []
 
     def set_history(self, history):
         self.history = history
-        
+
     def send_request(self, user_input):
         self.history.append({"role": "user", "content": user_input})
         try:
-            completion = self.client.create(
-                model="local-model",
+            completion = self.client.chat.completions.create(
+                model="local-model",  # Make sure this is the correct model identifier for your use case
                 messages=self.history,
-                temperature=0.7,
-                stream=True,
-            )
+                temperature=0.7
+        )
 
             new_message_content = ""
-            for chunk in completion:
-                if 'delta' in chunk.choices[0] and 'content' in chunk.choices[0].delta:
-                    new_message_content += chunk.choices[0].delta['content']
+            # Extract messages from the choices in the completion response
+            if completion.choices:
+                for choice in completion.choices:
+                    # Accessing the message content using dot notation
+                    if choice.message.role == 'assistant':
+                        new_message_content += choice.message.content
 
             if new_message_content:
                 self.history.append({"role": "assistant", "content": new_message_content})
@@ -34,20 +33,17 @@ class APIClient:
         
     def send_summary_request(self, content):
         try:
-            # Here, a general completion model is used to create a summary.
-            # You might want to customize the prompt based on the content and desired summary style.
-            summary_completion = openai.Completion.create(
-                model="local-model",  # Your custom model
+            summary_completion = self.client.chat.completions.create(
+                model="local-model",
                 prompt=f"Please summarize the following information:\n\n{content}",
-                max_tokens=150  # Adjust as needed
+                max_tokens=150
             )
 
-            # Extracting and returning the summary text
+            # Adjusting response handling according to the new API structure
             return summary_completion.choices[0].text.strip()
         except Exception as e:
             return f"Error generating summary: {e}"
 
-
     def get_history(self):
-        # Return the conversation history
         return self.history
+    

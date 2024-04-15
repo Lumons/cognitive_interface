@@ -1,5 +1,6 @@
 import openai
 from langchain_text_splitters import RecursiveCharacterTextSplitter
+import os
 
 class BaseAgent:
     def __init__(self, model_name="local-model", system_query="Define the role and task for this agent."):
@@ -18,71 +19,72 @@ class BaseAgent:
                     {"role": "user", "content": user_query}
                 ]
             )
-            # Check if response is successful and a dictionary
             if isinstance(response, dict) and 'choices' in response and len(response['choices']) > 0:
-                # Correctly accessing and returning the response text
                 response_text = response['choices'][0]['message']['content']
-                print(response_text)  # Print the response text for debugging
-                return response_text  # Return the response text so it can be used outside this method
+                return response_text
             else:
-                error_message = "Unexpected response format or empty choices"
-                print(error_message, response)
-                return error_message  # Return the error message if response is not as expected
+                return "Unexpected response format or empty choices"
         except Exception as e:
-            error_message = f"An error occurred: {e}"
-            print(error_message)
-            return error_message  # Return the error message on exception
-
+            return f"An error occurred: {e}"
 
 class Summariser(BaseAgent):
     def __init__(self):
-        super().__init__(system_query="You are a summariser, provide a list of the topics covered in this journal entry:")
-   
-    def process_chunks(self, chunks):
-        markdown_output = []
-        for index, chunk in enumerate(chunks, start=1):  # Start numbering from 1
-            text_content = chunk.page_content
-            print("Processing chunk:", text_content[:100])  # Show the beginning of the chunk
-            response = self.get_response(text_content)  # Get the response from the API
-            print("Response received for chunk:", response)  # Ensure the response is what's expected
-        
-        # Format the response into a markdown entry
-            markdown_entry = f"### Chunk {index} summary:\n```markdown\n{response}\n```\n\n"
-            markdown_output.append(markdown_entry)  # Append the formatted markdown to the list
-            print("Markdown entry to append:", markdown_entry)  # Debug print to check the markdown entry
-        
-    def save_to_markdown(self, markdown_output):
-        # Define the file path where the markdown file will be saved
-        filepath = 'output.md'
-        with open(filepath, 'w', encoding='utf-8') as file:
-            file.writelines(markdown_output)
-        print(f"Markdown file saved successfully at {filepath}")
+        super().__init__(system_query="Return nothing but a list of the topics covered in this journal entry:")
 
+    def process_chunks(self, chunks):
+        markdown_output = ["## Summary\n"]
+        for index, chunk in enumerate(chunks, start=1):
+            text_content = chunk.page_content
+            response = self.get_response(text_content)
+            markdown_entry = f"### Chunk {index} summary:\n{response}\n\n"
+            markdown_output.append(markdown_entry)
+        return markdown_output
+
+    def save_to_markdown(self, markdown_output, filepath):
+        mode = 'a' if os.path.exists(filepath) else 'w'
+        with open(filepath, mode, encoding='utf-8') as file:
+            file.writelines(markdown_output)
+        print(f"Markdown file updated successfully at {filepath}")
+
+class PeopleFinder(BaseAgent):
+    def __init__(self):
+        super().__init__(system_query="Return nothing but a list of names mentioned in this journal entry:")
+
+    def process_chunks(self, chunks):
+        markdown_output = ["## Summary\n"]
+        for index, chunk in enumerate(chunks, start=1):
+            text_content = chunk.page_content
+            response = self.get_response(text_content)
+            markdown_entry = f"### Chunk {index} summary:\n{response}\n\n"
+            markdown_output.append(markdown_entry)
+        return markdown_output
+
+    def save_to_markdown(self, markdown_output, filepath):
+        mode = 'a' if os.path.exists(filepath) else 'w'
+        with open(filepath, mode, encoding='utf-8') as file:
+            file.writelines(markdown_output)
+        print(f"Markdown file updated successfully at {filepath}")
 
 def read_file_contents(file_path):
     try:
+        print(f"Trying to open the file: {os.path.abspath(file_path)}")
         with open(file_path, 'r', encoding='utf-8') as file:
-            return file.read()
+            contents = file.read()
+            print(f"Successfully read {len(contents)} characters from the file.")
+            return contents
     except Exception as e:
-        print(f"Error reading file: {e}")
+        print(f"Error reading file: {os.path.abspath(file_path)} - {e}")
         return None
 
-
-
 if __name__ == "__main__":
-    # Define the path to the file directly
-    file_path = "C:\\Users\\montu\\repos\\interface\\logs\\2024-04-03-user-contents.txt"
-    
-    # Read the contents of the file
+    file_path = "logs/2024-02-08T12-43-36+0000-Log-entry-1.json"
+    markdown_file_path = "output.md"
     file_contents = read_file_contents(file_path)
-
-    custom_text_splitter = RecursiveCharacterTextSplitter(
-    # Set custom chunk size
-    chunk_size = 1500,
-    chunk_overlap  = 200
-    )
+    custom_text_splitter = RecursiveCharacterTextSplitter(chunk_size=3000, chunk_overlap=250)
     chunks = custom_text_splitter.create_documents([file_contents])
-    
-
     summariser = Summariser()
-    summariser.process_chunks(chunks)
+    markdown_content = summariser.process_chunks(chunks)
+    summariser.save_to_markdown(markdown_content, markdown_file_path)
+    peoplefinder = PeopleFinder()
+    markdown_content = peoplefinder.process_chunks(chunks)
+    peoplefinder.save_to_markdown(markdown_content, markdown_file_path)
